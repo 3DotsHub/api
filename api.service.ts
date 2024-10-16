@@ -1,11 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
-import { VIEM_CONFIG } from 'api.config';
+import { CONFIG, VIEM_CONFIG } from 'api.config';
 import { TelegramService } from 'telegram/telegram.service';
+import { Chain, mainnet, polygon } from 'viem/chains';
+
+export const INDEXING_TIMEOUT_COUNT: number = 10;
+export const POLLING_DELAY: { [key: Chain['id']]: number } = {
+	[mainnet.id]: 6_000, // blocktime: 12s
+	[polygon.id]: 10_000, // blocktime: 2s, skip: 5 blks
+};
 
 @Injectable()
 export class ApiService {
 	private readonly logger = new Logger(this.constructor.name);
+	private indexing: boolean = false;
+	private indexingTimeoutCount: number = 0;
 	private fetchedBlockheight: number = 0;
 
 	constructor(private readonly telegram: TelegramService) {
@@ -19,12 +28,20 @@ export class ApiService {
 		return Promise.all(promises);
 	}
 
-	@Interval(5_000)
+	@Interval(POLLING_DELAY[CONFIG.chain.id])
 	async updateBlockheight() {
 		const tmp: number = parseInt((await VIEM_CONFIG.getBlockNumber()).toString());
-		if (tmp > this.fetchedBlockheight) {
-			this.fetchedBlockheight = tmp;
+		this.indexingTimeoutCount += 1;
+		if (tmp > this.fetchedBlockheight && !this.indexing) {
+			this.indexing = true;
 			await this.updateWorkflow();
+			this.indexingTimeoutCount = 0;
+			this.fetchedBlockheight = tmp;
+			this.indexing = false;
+		}
+		if (this.indexingTimeoutCount >= INDEXING_TIMEOUT_COUNT && this.indexing) {
+			this.indexingTimeoutCount = 0;
+			this.indexing = false;
 		}
 	}
 }
