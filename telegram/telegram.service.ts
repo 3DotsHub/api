@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import TelegramBot from 'node-telegram-bot-api';
 import { TelegramGroupState, TelegramState } from './telegram.types';
-import { Storj } from 'storj/storj.s3.service';
+import { StorjClient } from 'storj/storj.client.service';
 import { Groups, SubscriptionGroups } from './dtos/groups.dto';
 import { WelcomeGroupMessage } from './messages/WelcomeGroup.message';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -16,7 +16,7 @@ export class TelegramService {
 	private telegramState: TelegramState;
 	private telegramGroupState: TelegramGroupState;
 
-	constructor(private readonly storj: Storj) {
+	constructor(private readonly storj: StorjClient) {
 		if (!process.env.TELEGRAM_BOT_TOKEN) throw new Error('TELEGRAM_BOT_TOKEN not available');
 
 		this.bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
