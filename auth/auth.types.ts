@@ -18,3 +18,7 @@ export type AuthPayload = {
 export type AuthAccessToken = {
 	accessToken: string;
 };
+
+export interface AuthenticatedRequest extends Request {
+	user?: AuthPayload;
+}

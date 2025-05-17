@@ -30,7 +30,7 @@ export class AuthGuard implements CanActivate {
 				secret: this.wallet.getJwtSecret(),
 			});
 
-			console.log({ payload });
+			// console.log({ payload });
 			// TODO: on chain verification, e.g. AccessManager
 
 			request['user'] = payload;

@@ -1,52 +1,36 @@
-import { Controller, ParseFilePipeBuilder, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, ParseFilePipeBuilder, Post, Req, UnauthorizedException, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
+import { StorjClient } from './storj.client.service';
+import { AuthenticatedRequest } from '../auth/auth.types';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller()
+@ApiTags('File Controller')
+@Controller('file')
 export class StorjUploadController {
-	constructor() {}
+	constructor(private readonly storj: StorjClient) {}
 
 	@UseInterceptors(FileInterceptor('file'))
-	@Post('file')
-	uploadFile(@UploadedFile() file: Express.Multer.File) {
-		return {
-			file: file.buffer.toString(),
-		};
-	}
-
-	@UseInterceptors(FileInterceptor('file'))
-	@Post('file/pass-validation')
-	uploadFileAndPassValidation(
+	@Post('validation')
+	async uploadFileAndPassValidation(
 		@UploadedFile(
-			new ParseFilePipeBuilder()
-				.addFileTypeValidator({
-					fileType: 'jpeg',
-				})
-				.build({
-					fileIsRequired: true,
-				})
+			new ParseFilePipeBuilder().build({
+				fileIsRequired: true,
+			})
 		)
-		file?: Express.Multer.File
-	) {
-		return {
-			file: file?.buffer.toString(),
-		};
-	}
+		file: Express.Multer.File | undefined,
 
-	@UseInterceptors(FileInterceptor('file'))
-	@Post('file/fail-validation')
-	uploadFileAndFailValidation(
-		@UploadedFile(
-			new ParseFilePipeBuilder()
-				.addFileTypeValidator({
-					fileType: 'jpg',
-				})
-				.build()
-		)
-		file: Express.Multer.File
+		@Req()
+		req: AuthenticatedRequest
 	) {
+		const user = req.user;
+		if (!user) throw new UnauthorizedException();
+
+		const { buffer, originalname } = file;
+		const result = await this.storj.write(`/test/${user.address.toLowerCase()}/${originalname}`, buffer, true);
+
 		return {
-			file: file.buffer.toString(),
+			result,
 		};
 	}
 }
