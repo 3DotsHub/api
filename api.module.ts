@@ -10,10 +10,19 @@ import { DockerModule } from './docker/docker.module';
 import { AuthModule } from 'auth/auth.module';
 import { WalletModule } from 'wallet/wallet.module';
 import { StorjModule } from 'storj/storj.module';
+import { OllamaModule } from 'ollama/ollama.module';
 
 // APP MODULE
 @Module({
-	imports: [ConfigModule.forRoot(), ScheduleModule.forRoot(), AuthModule, WalletModule, DockerModule, StorjModule],
+	imports: [
+		ConfigModule.forRoot(),
+		ScheduleModule.forRoot(),
+		AuthModule,
+		WalletModule,
+		DockerModule,
+		StorjModule,
+		OllamaModule,
+	],
 	// controllers: [
 
 	// ],

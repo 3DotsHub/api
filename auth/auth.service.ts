@@ -51,7 +51,9 @@ export class AuthService {
 			throw new BadRequestException('Message is not valid');
 
 		// @dev: optional add verify whitelisted address or linked to an AccessManager
-		// TODO: add AccessManager verification from onChain data or indexer (?)
+		// FIXME: remove hardcode and add AccessManager verification from onChain data or indexer (?)
+		if (input.address.toLowerCase() != '0x0170F42f224b99CcbbeE673093589c5f9691dd06'.toLowerCase())
+			throw new BadRequestException('Address not recognized');
 
 		// verify signature input
 		if (!isHex(signature)) throw new BadRequestException('Signature is not hex type: 0x...');

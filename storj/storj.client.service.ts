@@ -1,5 +1,11 @@
 import { Injectable, Logger, ValidationError } from '@nestjs/common';
-import { GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, PutObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
+import {
+	GetObjectCommand,
+	GetObjectCommandOutput,
+	PutObjectCommand,
+	PutObjectCommandOutput,
+	S3Client,
+} from '@aws-sdk/client-s3';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
