@@ -1,10 +1,16 @@
 import { Injectable, Logger, ValidationError } from '@nestjs/common';
-import { GetObjectCommand, GetObjectCommandOutput, PutObjectCommand, PutObjectCommandOutput, S3Client } from '@aws-sdk/client-s3';
+import {
+	GetObjectCommand,
+	GetObjectCommandOutput,
+	PutObjectCommand,
+	PutObjectCommandOutput,
+	S3Client,
+} from '@aws-sdk/client-s3';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
 @Injectable()
-export class Storj extends S3Client {
+export class StorjClient extends S3Client {
 	private readonly logger = new Logger(this.constructor.name);
 	readonly bucket: string;
 
@@ -25,11 +31,11 @@ export class Storj extends S3Client {
 		this.bucket = process.env.STORJ_BUCKET;
 	}
 
-	async write(key: string, data: any): Promise<PutObjectCommandOutput> {
+	async write(key: string, data: any, raw: boolean = false): Promise<PutObjectCommandOutput> {
 		const cmd = new PutObjectCommand({
 			Bucket: this.bucket,
 			Key: key,
-			Body: JSON.stringify(data),
+			Body: raw ? data : JSON.stringify(data),
 		});
 
 		try {

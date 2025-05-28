@@ -17,7 +17,7 @@ import { AuthGuard } from './auth.guard';
 			useFactory: async (wallet: WalletService) => {
 				return {
 					secret: wallet.getJwtSecret(),
-					signOptions: { expiresIn: '4h' },
+					signOptions: { expiresIn: '14h' },
 				};
 			},
 		}),
