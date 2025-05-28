@@ -1,16 +1,71 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { isAddress, isHex, zeroAddress } from 'viem';
+import { Address, isAddress, isHex, zeroAddress } from 'viem';
 import { WalletService } from 'wallet/wallet.service';
-import { AuthAccessToken, AuthPayload, CreateMessageOptions, SignInOptions } from './auth.types';
+import { AuthAccessToken, AuthPayload, AuthPermissionState, CreateMessageOptions, SignInOptions } from './auth.types';
 import { formatMinutes } from 'utils/format';
+import { StorjClient } from 'storj/storj.client.service';
+import { AuthPermissionDto } from './dtos/AuthPermission.dto';
 
 @Injectable()
 export class AuthService {
+	private readonly logger = new Logger(this.constructor.name);
+	private readonly storjPath: string = '/auth.permission.json';
+	private permission: AuthPermissionState;
+
 	constructor(
+		private readonly storj: StorjClient,
 		private readonly wallet: WalletService,
 		private jwtService: JwtService
-	) {}
+	) {
+		const time: number = Date.now();
+		this.permission = {
+			apiVersion: process.env.npm_package_version,
+			createdAt: time,
+			updatedAt: time,
+			roles: {},
+			partner: {},
+		};
+
+		this.readState();
+	}
+
+	async readState() {
+		this.logger.log(`Reading backup...`);
+		const response = await this.storj.read(this.storjPath, AuthPermissionDto);
+
+		if (response.messageError || response.validationError.length > 0) {
+			this.logger.error(response.messageError);
+			this.logger.log(`New state created.`);
+		} else {
+			this.permission = {
+				...this.permission,
+				...response.data,
+			};
+			this.logger.log(`State restored.`);
+		}
+	}
+
+	async writeState() {
+		this.permission.apiVersion = process.env.npm_package_version;
+		this.permission.updatedAt = Date.now();
+		const response = await this.storj.write(this.storjPath, this.permission);
+		const httpStatusCode = response['$metadata'].httpStatusCode;
+		if (httpStatusCode == 200) {
+			this.logger.log(`State backup stored.`);
+		} else {
+			this.logger.error(`State backup failed. httpStatusCode: ${httpStatusCode}`);
+		}
+		return httpStatusCode;
+	}
+
+	getScope(address: Address) {
+		const key = address.toLowerCase() as Address;
+		return {
+			roles: this.permission.roles[key],
+			partner: this.permission.partner[key],
+		};
+	}
 
 	createMessage({ address, valid, expired }: CreateMessageOptions) {
 		const now = Date.now();
@@ -50,11 +105,6 @@ export class AuthService {
 		if (messageOriginal != messageParsed || messageTemplate.length != messageSplit.length)
 			throw new BadRequestException('Message is not valid');
 
-		// @dev: optional add verify whitelisted address or linked to an AccessManager
-		// FIXME: remove hardcode and add AccessManager verification from onChain data or indexer (?)
-		if (input.address.toLowerCase() != '0x0170F42f224b99CcbbeE673093589c5f9691dd06'.toLowerCase())
-			throw new BadRequestException('Address not recognized');
-
 		// verify signature input
 		if (!isHex(signature)) throw new BadRequestException('Signature is not hex type: 0x...');
 
@@ -72,6 +122,14 @@ export class AuthService {
 			}
 		} catch (e) {
 			throw new BadRequestException('Signature is not valid');
+		}
+
+		// verify if address has roles
+		const key = input.address.toLowerCase();
+		const roles = this.permission.roles[key as Address];
+
+		if (roles == undefined || roles.length == 0) {
+			throw new BadRequestException('Address not recognized');
 		}
 
 		// create payload and return access token

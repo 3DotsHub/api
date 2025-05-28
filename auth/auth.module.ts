@@ -7,6 +7,7 @@ import { WalletModule } from 'wallet/wallet.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth.guard';
 import { RolesGuard } from './roles.guard';
+import { StorjClient } from 'storj/storj.client.service';
 
 @Module({
 	imports: [
@@ -33,6 +34,7 @@ import { RolesGuard } from './roles.guard';
 			provide: APP_GUARD,
 			useClass: RolesGuard,
 		},
+		StorjClient,
 	],
 	controllers: [AuthController],
 })

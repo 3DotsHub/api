@@ -2,9 +2,12 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PartnerService } from './partner.service';
 import { PartnerDTO } from './dtos/partner.dto';
+import { Roles } from 'auth/decorators/roles.decorator';
+import { Role } from 'auth/roles.enum';
 
 @ApiTags('Partner Controller')
 @Controller('partner')
+@Roles(Role.Manager) // @dev: give manager permission
 export class PartnerController {
 	constructor(private readonly partner: PartnerService) {}
 

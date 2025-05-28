@@ -1,4 +1,5 @@
 import { Address, Hex } from 'viem';
+import { Role } from './roles.enum';
 
 export type CreateMessageOptions = {
 	address: Address;
@@ -22,3 +23,11 @@ export type AuthAccessToken = {
 export interface AuthenticatedRequest extends Request {
 	user?: AuthPayload;
 }
+
+export type AuthPermissionState = {
+	apiVersion: string;
+	createdAt: number;
+	updatedAt: number;
+	roles: { [key: Address]: Role[] }; // mapped roles
+	partner: { [key: Address]: number[] }; // mapped partner ids
+};

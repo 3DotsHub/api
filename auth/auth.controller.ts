@@ -1,14 +1,15 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateMessageDto } from './dtos/CreateMessage.dto';
 import { SignInDto } from './dtos/SignIn.dto';
 import { Public } from './decorators/public.decorator';
+import { AuthenticatedRequest } from './auth.types';
 
 @ApiTags('Auth Controller')
 @Controller('auth')
 export class AuthController {
-	constructor(private authService: AuthService) {}
+	constructor(private auth: AuthService) {}
 
 	@Public()
 	@ApiResponse({
@@ -16,7 +17,7 @@ export class AuthController {
 	})
 	@Post('message')
 	message(@Body() { address, expired, valid }: CreateMessageDto) {
-		return this.authService.createMessage({ address, expired, valid });
+		return this.auth.createMessage({ address, expired, valid });
 	}
 
 	@Public()
@@ -25,6 +26,19 @@ export class AuthController {
 	})
 	@Post('signIn')
 	async signIn(@Body() { message, signature }: SignInDto) {
-		return await this.authService.signIn({ message, signature });
+		return await this.auth.signIn({ message, signature });
+	}
+
+	@ApiResponse({
+		description: '',
+	})
+	@Post('scope')
+	async scope(
+		@Req()
+		req: AuthenticatedRequest
+	) {
+		const user = req.user;
+		if (!user) throw new UnauthorizedException();
+		return this.auth.getScope(user.address);
 	}
 }
