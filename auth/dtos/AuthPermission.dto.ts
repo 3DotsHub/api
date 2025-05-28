@@ -1,4 +1,4 @@
-import { Role } from 'auth/roles.enum';
+import { Role } from 'auth/roles.types';
 import { IsNumber, IsObject, IsString } from 'class-validator';
 import { Address } from 'viem';
 

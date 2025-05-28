@@ -1,5 +1,5 @@
 import { Address, Hex } from 'viem';
-import { Role } from './roles.enum';
+import { Role } from './roles.types';
 
 export type CreateMessageOptions = {
 	address: Address;

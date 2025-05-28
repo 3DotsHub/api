@@ -3,7 +3,7 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PartnerService } from './partner.service';
 import { PartnerDTO } from './dtos/partner.dto';
 import { Roles } from 'auth/decorators/roles.decorator';
-import { Role } from 'auth/roles.enum';
+import { Role } from 'auth/roles.types';
 
 @ApiTags('Partner Controller')
 @Controller('partner')
