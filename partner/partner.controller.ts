@@ -23,9 +23,7 @@ export class PartnerController {
 		description: '',
 	})
 	@Post('create')
-	async getPartnerCreate(
-		@Body() { firstName, lastName, companyName, email, street, number, additional, zipcode, city, country }: PartnerDTO
-	) {
+	async getCreate(@Body() { firstName, lastName, companyName, email, street, number, additional, zipcode, city, country }: PartnerDTO) {
 		console.log({ firstName, lastName, companyName, email, street, number, additional, zipcode, city, country });
 		if (!firstName && !lastName && !companyName) console.log('asdf');
 
@@ -65,7 +63,7 @@ export class PartnerController {
 		description: '',
 	})
 	@Post('update')
-	async getPartnerUpdate() {
+	async getUpdate() {
 		return 'partner update';
 	}
 }
